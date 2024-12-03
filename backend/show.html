@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MailHog Email Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 90%;
+            margin: 20px auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .email-card {
+            border-bottom: 1px solid #ddd;
+            padding: 15px 0;
+        }
+        .email-card:last-child {
+            border-bottom: none;
+        }
+        .email-card h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #333;
+        }
+        .email-card p {
+            margin: 5px 0;
+            color: #555;
+        }
+        .email-body {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MailHog Emails</h1>
+        <div id="email-list"></div>
+    </div>
+
+    <script>
+        async function fetchEmails() {
+            try {
+                const response = await fetch('http://localhost:8025/api/v2/messages');
+                const data = await response.json();
+
+                const emailList = document.getElementById('email-list');
+                emailList.innerHTML = '';
+
+                if (data && data.items.length > 0) {
+                    data.items.forEach(email => {
+                        const emailCard = document.createElement('div');
+                        emailCard.className = 'email-card';
+
+                        const from = email.Content.Headers['From']?.[0] || 'Unknown Sender';
+                        const to = email.Content.Headers['To']?.[0] || 'Unknown Recipient';
+                        const subject = email.Content.Headers['Subject']?.[0] || 'No Subject';
+                        const body = email.Content.Body || 'No Content';
+
+                        emailCard.innerHTML = `
+                            <h3>${subject}</h3>
+                            <p><strong>From:</strong> ${from}</p>
+                            <p><strong>To:</strong> ${to}</p>
+                            <div class="email-body">${body}</div>
+                        `;
+
+                        emailList.appendChild(emailCard);
+                    });
+                } else {
+                    emailList.innerHTML = '<p>No emails found.</p>';
+                }
+            } catch (error) {
+                console.error('Error fetching emails:', error);
+                document.getElementById('email-list').innerHTML = '<p>Error fetching emails. Please check your MailHog setup.</p>';
+            }
+        }
+
+        // Fetch emails on page load
+        fetchEmails();
+    </script>
+</body>
+</html>
